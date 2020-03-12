@@ -7,6 +7,9 @@ It has just 35* opcodes, and a simple structure, so it's a recommended starting 
 *35 distinct functions. Opcodes carry their operands, eg, 0x6XNN sets register VX to the byte NN (ie, 0x60FF sets V0 to FF)
 
 
+Includes emulator/interpreter and disassembler. Only disassemble files with which you are allowed to do so. Disassembles in a rudimentary way, with 1:1 replacement and no separation of subroutines or labeling.
+
+
 Specifications of CHIP-8:
 
 Opcodes: 35, 2 bytes, no distinct operands, big-endian.
@@ -26,3 +29,8 @@ Stack: 16 levels, used only to store PC for subroutines. Stack pointer stores la
 16 input keys: 0-F, either pressed or not pressed. Keyboard mapping to come.
 
 Graphics: 64x32 px monochrome screen, sprite based graphics.
+
+
+Files:
+chip8vm.c -- CHIP-8 Emulator
+disasm.c -- CHIP-8 bytecode disassembler (rudimentary)
