@@ -58,7 +58,7 @@ int main(int argc, char *argv[]){
     // Dump our memory contents to the console (TEMP)
     printf("0x000 - 0x1ff: intended to be reserved\n");
     printf("Offset from 0x200 is: %3x\n", offset);
-    int pc = 0x200;
+    int pc = 0x200 + offset;
     int end_of_rom = (end_byte < 4096) ? end_byte : 4096;
     while (pc < end_of_rom)
     {
