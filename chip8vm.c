@@ -17,6 +17,7 @@ typedef struct {
 }
 chip8_state;
 
+chip8_state * create_state();
 void load_rom(char *romfilename, chip8_state *state);
 void dump_memory(chip8_state *state);
 
@@ -28,17 +29,10 @@ int main(int argc, char *argv[]){
         exit(1);
     }
 
-    //  Create a pointer to a state, so we can modify it in functions
-    chip8_state *state = malloc(sizeof(chip8_state));
-    // Initialize important fields
-    // It's not important for say, registers to be cleared
-    // and graphics will undoubtably be immediately cleared with 0x00e0 op 
-    memset(state->memory, 0, sizeof(state->memory));
-    state->pc = 0x200;
-    state->sp = 0x0;
-    memset(state->key, 0, sizeof(state->key));
+    // Create and initialize a state struct
+    chip8_state *state = create_state();
 
-    // Load given romfile
+    // Load given romfile into VM memory
     load_rom(argv[1], state);
 
     // dump memory to console. will get removed once there is "interesting"
@@ -49,6 +43,19 @@ int main(int argc, char *argv[]){
     free(state);
 }
 
+chip8_state * create_state(void)
+{
+    //  Create a pointer to a state, so we can modify it in functions
+    chip8_state *state = malloc(sizeof(chip8_state));
+    // Initialize important fields
+    // It's not important for say, registers to be cleared
+    // and graphics will undoubtably be immediately cleared with 0x00e0 op 
+    memset(state->memory, 0, sizeof(state->memory));
+    state->pc = 0x200;
+    state->sp = 0x0;
+    memset(state->key, 0, sizeof(state->key));
+    return state;
+}
 
 // Load a rom into vm memory
 void load_rom(char *romfilename, chip8_state *state)
