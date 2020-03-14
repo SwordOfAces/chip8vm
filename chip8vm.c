@@ -1,19 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h> // for memset
+#include <string.h> // for memset, memcpy
 
 typedef struct {
     unsigned short opcode;
     unsigned char memory[4096];
-    unsigned char v[16];
+    unsigned char v[16];        // registers
     unsigned short index_reg;
-    unsigned short pc;
-    unsigned char gfx[64 * 32];
+    unsigned short pc;          // program counter
+    unsigned char gfx[64 * 32]; // VRAM
     unsigned char delay_timer;
     unsigned char sound_timer;
     unsigned short stack[16];
-    unsigned char sp;
-    unsigned char key[16];
+    unsigned char sp;           // stack pointer
+    unsigned char key[16];      // keypad key states
 }
 chip8_state;
 
@@ -35,8 +35,8 @@ int main(int argc, char *argv[]){
     // Load given romfile into VM memory
     load_rom(argv[1], state);
 
-    // dump memory to console. will get removed once there is "interesting"
-    // effects that can be observed
+    // Dump memory to console.
+    // Used here for testing memory results
     dump_memory(state);
 
     // Destroy the state
@@ -73,17 +73,20 @@ void load_rom(char *romfilename, chip8_state *state)
     fread(state->memory + 0x200, 1, 0xe00, romfile);
 }
 
-
+// Dump memory contents to console.
+// Useful now as a display of results, later as debugging tool
 void dump_memory(chip8_state *state)
 {
-    // Dump our memory contents to the console
+    // For each 16 byte "block"
     for (int i = 0; i < 256; i++)
     {
+        // Print the address of the first byte
         printf("%03x: ", i * 16);
         // Possibility: check against previous line, if same, then
         // do *** for one line, and pick back up when memory is different
         for (int j = 0; j < 16; j++)
         {
+            // Print the jth byte in this ith 16 byte block
             printf("%02x ", state->memory[i * 16 + j]);
         }
         printf("\n");
