@@ -18,6 +18,7 @@ typedef struct {
 chip8_state;
 
 void load_rom(char *romfilename, chip8_state *state);
+void dump_memory(chip8_state *state);
 
 int main(int argc, char *argv[]){
     // Ensure that we're being used with what we'll assume is a romfile
@@ -40,18 +41,9 @@ int main(int argc, char *argv[]){
     // Load given romfile
     load_rom(argv[1], state);
 
-    // Dump our memory contents to the console (TEMP)
-    for (int i = 0; i < 256; i++)
-    {
-        printf("%03x: ", i * 16);
-        for (int j = 0; j < 16; j++)
-        {
-            printf("%02x ", state->memory[i * 16 + j]);
-        }
-        printf("\n");
-    }
-    printf("Memory dumped\n");
-
+    // dump memory to console. will get removed once there is "interesting"
+    // effects that can be observed
+    dump_memory(state);
 
     // Destroy the state
     free(state);
@@ -72,4 +64,22 @@ void load_rom(char *romfilename, chip8_state *state)
     // Fill our memory with program data, starting at 0x200
     // 0x1000 total memory - 0x200 reserved = 0xe00 for rom 
     fread(state->memory + 0x200, 1, 0xe00, romfile);
+}
+
+
+void dump_memory(chip8_state *state)
+{
+    // Dump our memory contents to the console
+    for (int i = 0; i < 256; i++)
+    {
+        printf("%03x: ", i * 16);
+        // Possibility: check against previous line, if same, then
+        // do *** for one line, and pick back up when memory is different
+        for (int j = 0; j < 16; j++)
+        {
+            printf("%02x ", state->memory[i * 16 + j]);
+        }
+        printf("\n");
+    }
+    printf("Memory dumped\n");
 }
