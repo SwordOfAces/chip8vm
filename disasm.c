@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
     }
 
 
-    // create buffer
+    // create ram
     unsigned char memory[4096];
     memset(memory, 0, sizeof(memory));
 
@@ -31,28 +31,15 @@ int main(int argc, char *argv[]){
         printf("Could not open file: %s\n", argv[1]);
         exit(1);
     }
+    // determine length of program data:
+    // add 0x200 for reserved memory
+    fseek(romfile, 0L, SEEK_END);
+    int end_byte = ftell(romfile) + 0x200;
+    fseek(romfile, 0L, SEEK_SET);
 
-    // Fill our memory with program data, starting at 0x200
-    int end_byte = 0;
-    for (int i = 0x200; i < 0x1000; i++)
-    {
-        char c = fgetc(romfile);
-        if (c != EOF)
-        {
-            memory[i] = c;
-        }
-        // If we've reached the EOF, this for loop takes over to fill the
-        // remainder with 0s, and then breaks from the for loop
-        else
-        {
-            end_byte = i;
-            for (int j = i; j < 0xfff; j++)
-            {
-                memory[j] = 0x000;
-            }
-            break;
-        }
-    }
+    // load into ram.
+    fread(memory + 0x200, 1, 0xe00, romfile);
+
     fclose(romfile);
 
     // Dump our memory contents to the console (TEMP)
@@ -124,6 +111,7 @@ int main(int argc, char *argv[]){
                 printf("ADD V%x $%02x\n",
                         (opcode & 0xf00) >> 8,
                         opcode & 0xff);
+                break;
             case 0x8:
                 // 0x8??? gets messier than the very neat categories so far.
                 // and operate on VX and VY depending on last hex digit
