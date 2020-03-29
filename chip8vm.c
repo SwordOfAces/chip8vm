@@ -128,10 +128,13 @@ void emulate_opcode(chip8_state *state)
 
     // Getting X & Y from opcodes is tricky and having a var
     // is very nice, so we declare them up here.
-    // NN & NNN are just masks w/o shifts so they dont need them
     // these are the values, vx = 7 means register x is storing 7
+    // x & y are the indices. x = 7 means register 7
     unsigned char vx, vy;
+    unsigned char x = (opcode & 0xf00) >> 8;
+    unsigned char y = (opcode & 0x0f0) >> 4;
 
+    // NN & NNN are just masks w/o shifts so they dont need them
 
     // Get just first nibble
     // Shifts are 4 * nibbles moved bc 4 bits to a nibble
@@ -159,13 +162,13 @@ void emulate_opcode(chip8_state *state)
             break;
         case 0x3:
             // Skip next instruction if VX == NN
-            vx  = state->v[(opcode & 0xf00) >> 8];
+            vx  = state->v[x];
             if (vx == (opcode & 0xff))
                 state->pc += 2;
             break;
         case 0x4:
             // Skip next instruction if VX != NN
-            vx  = state->v[(opcode & 0xf00) >> 8];
+            vx  = state->v[x];
             if (vx != (opcode & 0xff))
                 state->pc += 2;
             break;
@@ -175,20 +178,20 @@ void emulate_opcode(chip8_state *state)
             if ((opcode & 0xf) != 0)
                 invalid_opcode(pc, opcode);
             // else
-            vx  = state->v[(opcode & 0xf00) >> 8];
-            vy  = state->v[(opcode & 0x0f0) >> 4];
+            vx  = state->v[x];
+            vy  = state->v[y];
             if (vx == vy)
                 state->pc += 2;
             break;
         case 0x6:
             // Sets VX to NN
-            state->v[(opcode & 0xf00) >> 8] = (opcode & 0xff);
+            state->v[x] = (opcode & 0xff);
             break;
         case 0x7:
             // Increment VX by NN
-            vx = state->v[(opcode & 0xf00) >> 8];
+            vx = state->v[x];
             unsigned int result = vx + (opcode & 0xff);
-            state->v[(opcode & 0xf00) >> 8] = result & 0xfff;
+            state->v[x] = result & 0xfff;
             break;
         case 0x8:
             // 0x8??? is messier than the neat categories so far.
@@ -197,11 +200,14 @@ void emulate_opcode(chip8_state *state)
             {
                 case 0x0:
                     // Assign VX value in VY
-                    unimplemented_opcode_err(opcode);
+                    vy = state->v[y];
+                    state->v[x] = vy;
                     break;
                 case 0x1:
                     // VX = VX | VY
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vx | vy);
                     break;
                 case 0x2:
                     // VX = VX & VY
@@ -237,6 +243,7 @@ void emulate_opcode(chip8_state *state)
                 default:
                     invalid_opcode(pc, opcode);
             }
+            break;
         // (Back to first nibble decoding)
         case 0x9:
             if ((opcode & 0xf) != 0)
@@ -543,7 +550,45 @@ int test_suite(chip8_state *state)
     errors += test_op(state, test_no++, tested, 0xfe, 0);
 
 
-    
+    // 0x8XY0: set VX to value of VY
+
+    state->opcode = 0x8690;
+    state->v[9] = 0xbb;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0xbb, 0);
+
+
+    // 0x8XY1: VX stores result of bitwise or with VY
+
+    // 0x29 | 0xff = 0xff
+    state->opcode = 0x8691;
+    state->v[6] = 0x29;
+    state->v[9] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0xff, 0);
+
+    // 0x29 | 0x00 = 0x29
+    state->opcode = 0x8691;
+    state->v[6] = 0x29;
+    state->v[9] = 0x00;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x29, 0);
+
+    // 0x29 | 0x57 = 0x7f
+    state->opcode = 0x8691;
+    state->v[6] = 0x29;
+    state->v[9] = 0x57;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x7f, 0);
+
+
+
+
+
 
 
     return errors;
