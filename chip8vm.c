@@ -211,11 +211,15 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x2:
                     // VX = VX & VY
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vx & vy);
                     break;
                 case 0x3:
                     // VX = VX ^ VY
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vx ^ vy);
                     break;
                 case 0x4:
                     // Increment VX by VY
@@ -325,7 +329,8 @@ void emulate_opcode(chip8_state *state)
                 default:
                     // Invalid opcode starting with 0xf
                     invalid_opcode(pc, opcode);
-        }
+            }
+            break;
     }
 }
 
@@ -406,11 +411,12 @@ int test_op(chip8_state *state, unsigned char test_no,
 // Just a big battery of tests in sequence. 
 int test_suite(chip8_state *state)
 {
-    unsigned short tested, expected;
+    unsigned short tested;
     // if i need more than this i am a) testing way too much
     // and b) and yet doing a horrible job
     unsigned char test_no = 0;
     unsigned char errors = 0;
+    unsigned char dump = 0;
 
     // Notes:
     // remember to set everything related to the test,
@@ -430,15 +436,17 @@ int test_suite(chip8_state *state)
     
     // 0x1NNN: GOTO NNN
     // needs to set PC to NNN 
+    printf("0x1NNN\n");
+
     state->opcode = 0x1234;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, 0x234, 0);
+    errors += test_op(state, test_no++, tested, 0x234, dump);
 
     state->opcode = 0x1fff;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, 0xfff, 0);
+    errors += test_op(state, test_no++, tested, 0xfff, dump);
 
 
     // 0x2NNN: NO TESTS
@@ -448,6 +456,7 @@ int test_suite(chip8_state *state)
     // Skip next instruction if value in VX == NN
     // (ie, increment PC by 2 so that with the usual advance
     //  it will skip over the next)
+    printf("0x3XNN\n");
     
     // test positive
     state->opcode = 0x321a;
@@ -455,7 +464,7 @@ int test_suite(chip8_state *state)
     state->pc = 0x200;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, jumped, 0);
+    errors += test_op(state, test_no++, tested, jumped, dump);
 
     // test negative
     state->opcode = 0x321b;
@@ -463,11 +472,12 @@ int test_suite(chip8_state *state)
     state->pc = 0x200;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, 0x200, 0);
+    errors += test_op(state, test_no++, tested, 0x200, dump);
 
 
     // 0x4XNN: skip next instruction if VX != NN
     // (opposite of 0x3XNN)
+    printf("0x4XNN\n");
     
     // test positive
     state->opcode = 0x441a;
@@ -475,7 +485,7 @@ int test_suite(chip8_state *state)
     state->pc = 0x200;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, jumped, 0);
+    errors += test_op(state, test_no++, tested, jumped, dump);
 
     // test negative
     state->opcode = 0x441b;
@@ -483,10 +493,11 @@ int test_suite(chip8_state *state)
     state->pc = 0x200;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, 0x200, 0);
+    errors += test_op(state, test_no++, tested, 0x200, dump);
 
 
     // 0x5XY0: Skip next instruction if VX == VY
+    printf("0x5XY0\n");
     
     // test positive
     state->opcode = 0x5ab0;
@@ -495,7 +506,7 @@ int test_suite(chip8_state *state)
     state->v[0xb] = 0x24;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, jumped, 0);
+    errors += test_op(state, test_no++, tested, jumped, dump);
 
     // test neg
     state->opcode = 0x5fa0;
@@ -504,62 +515,66 @@ int test_suite(chip8_state *state)
     state->v[0xf] = 0x9;
     emulate_opcode(state);
     tested = state->pc;
-    errors += test_op(state, test_no++, tested, 0x200, 0);
+    errors += test_op(state, test_no++, tested, 0x200, dump);
 
 
     // 0x6XNN: set VX to NN
+    printf("0x6XNN\n");
     
     state->opcode = 0x60ef;
     emulate_opcode(state);
     tested = state->v[0];
-    errors += test_op(state, test_no++, tested, 0xef, 0);
+    errors += test_op(state, test_no++, tested, 0xef, dump);
 
     state->opcode = 0x6fff;
     emulate_opcode(state);
     tested = state->v[0xf];
-    errors += test_op(state, test_no++, tested, 0xff, 0);
+    errors += test_op(state, test_no++, tested, 0xff, dump);
 
 
     // 0x7XNN: increment  VX by NN
+    printf("0x7XNN\n");
     
     state->opcode = 0x7301;
     state->v[3] = 0xcf;
     emulate_opcode(state);
     tested = state->v[3];
-    errors += test_op(state, test_no++, tested, 0xd0, 0);
+    errors += test_op(state, test_no++, tested, 0xd0, dump);
 
     // overflow
     state->opcode = 0x7301;
     state->v[3] = 0xff;
     emulate_opcode(state);
     tested = state->v[3];
-    errors += test_op(state, test_no++, tested, 0x00, 0);
+    errors += test_op(state, test_no++, tested, 0x00, dump);
 
     // add 0
     state->opcode = 0x7300;
     state->v[3] = 0xff;
     emulate_opcode(state);
     tested = state->v[3];
-    errors += test_op(state, test_no++, tested, 0xff, 0);
+    errors += test_op(state, test_no++, tested, 0xff, dump);
     
     // add ff
     state->opcode = 0x73ff;
     state->v[3] = 0xff;
     emulate_opcode(state);
     tested = state->v[3];
-    errors += test_op(state, test_no++, tested, 0xfe, 0);
+    errors += test_op(state, test_no++, tested, 0xfe, dump);
 
 
     // 0x8XY0: set VX to value of VY
+    printf("0x8XY0\n");
 
     state->opcode = 0x8690;
     state->v[9] = 0xbb;
     emulate_opcode(state);
     tested = state->v[6];
-    errors += test_op(state, test_no++, tested, 0xbb, 0);
+    errors += test_op(state, test_no++, tested, 0xbb, dump);
 
 
     // 0x8XY1: VX stores result of bitwise or with VY
+    printf("0x8XY1\n");
 
     // 0x29 | 0xff = 0xff
     state->opcode = 0x8691;
@@ -567,7 +582,7 @@ int test_suite(chip8_state *state)
     state->v[9] = 0xff;
     emulate_opcode(state);
     tested = state->v[6];
-    errors += test_op(state, test_no++, tested, 0xff, 0);
+    errors += test_op(state, test_no++, tested, 0xff, dump);
 
     // 0x29 | 0x00 = 0x29
     state->opcode = 0x8691;
@@ -575,7 +590,7 @@ int test_suite(chip8_state *state)
     state->v[9] = 0x00;
     emulate_opcode(state);
     tested = state->v[6];
-    errors += test_op(state, test_no++, tested, 0x29, 0);
+    errors += test_op(state, test_no++, tested, 0x29, dump);
 
     // 0x29 | 0x57 = 0x7f
     state->opcode = 0x8691;
@@ -583,10 +598,64 @@ int test_suite(chip8_state *state)
     state->v[9] = 0x57;
     emulate_opcode(state);
     tested = state->v[6];
-    errors += test_op(state, test_no++, tested, 0x7f, 0);
+    errors += test_op(state, test_no++, tested, 0x7f, dump);
+
+
+    // 0x8XY2: VX stores result of bitwise and with VY
+    printf("0x8XY2\n");
+
+    // 0x29 & 0xff = 0x29
+    state->opcode = 0x8692;
+    state->v[6] = 0x29;
+    state->v[9] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x29, dump);
+
+    // 0x29 & 0x00 = 0x00
+    state->opcode = 0x8692;
+    state->v[6] = 0x29;
+    state->v[9] = 0x00;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x00, dump);
+
+    // 0x29 & 0x57 = 0x01
+    state->opcode = 0x8692;
+    state->v[6] = 0x29;
+    state->v[9] = 0x57;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x01, dump);
 
 
 
+    // 0x8XY3: VX stores result of bitwise xor with VY
+    printf("0x8XY3\n");
+
+    // 0x29 ^ 0xff = 0xd6
+    state->opcode = 0x8693;
+    state->v[6] = 0x29;
+    state->v[9] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0xd6, dump);
+
+    // 0x29 ^ 0x00 = 0x29
+    state->opcode = 0x8693;
+    state->v[6] = 0x29;
+    state->v[9] = 0x00;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x29, dump);
+
+    // 0x29 ^ 0x57 = 0x7e
+    state->opcode = 0x8693;
+    state->v[6] = 0x29;
+    state->v[9] = 0x57;
+    emulate_opcode(state);
+    tested = state->v[6];
+    errors += test_op(state, test_no++, tested, 0x7e, dump);
 
 
 
