@@ -20,6 +20,7 @@ chip8_state;
 chip8_state * create_state();
 void load_rom(char *romfilename, chip8_state *state);
 void dump_memory(chip8_state *state);
+void dump_state(chip8_state *state);
 
 int main(int argc, char *argv[]){
     // Ensure that we're being used with what we'll assume is a romfile
@@ -37,7 +38,14 @@ int main(int argc, char *argv[]){
 
     // Dump memory to console.
     // Used here for testing memory results
-    dump_memory(state);
+    // we'll peek into memory again later, when we start
+    // emulating things to do with it
+    // dump_memory(state);
+
+
+    // Dump useful state variables (rather, ones that aren't
+    // huge arrays of memory)
+    dump_state(state);
 
     // Destroy the state
     free(state);
@@ -92,4 +100,27 @@ void dump_memory(chip8_state *state)
         printf("\n");
     }
     printf("Memory dumped\n");
+}
+
+// Dump most of the state variables
+// excludes: memory, gfx, key
+// key could be in this
+void dump_state(chip8_state *state)
+{
+    printf("Curr Opcode: %04x\n", state->opcode);
+    printf("Registers:\n");
+    for (int i = 0; i < 16; i++)
+    {
+        printf("    V%i: %02x\n", i, state->v[i]);
+    }
+    printf("Index register: %04x\n", state->index_reg);
+    printf("PC: %04x\n", state->pc);
+    printf("Timers: Delay: %02x\n", state->delay_timer);
+    printf("        Sound: %02x\n", state->sound_timer);
+    printf("Stack:\n");
+    for (int i = 0; i < 16; i++)
+    {
+        printf("    %02i:  %04x\n", i, state->stack[i]);
+    }
+    printf("SP: %i\n", state->sp);
 }
