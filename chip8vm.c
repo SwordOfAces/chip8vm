@@ -190,8 +190,7 @@ void emulate_opcode(chip8_state *state)
         case 0x7:
             // Increment VX by NN
             vx = state->v[x];
-            unsigned int result = vx + (opcode & 0xff);
-            state->v[x] = result & 0xfff;
+            state->v[x] = (vx + (opcode & 0xff)) & 0xff;
             break;
         case 0x8:
             // 0x8??? is messier than the neat categories so far.
@@ -223,26 +222,36 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x4:
                     // Increment VX by VY
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vx + vy) & 0xff;
                     break;
                 case 0x5:
                     // Decrement VX by VY
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vx - vy) & 0xff;
                     break;
                 case 0x6:
                     // Shift VY right by one and set into VX
+                    // Set VF to VY's pre shift LSB
                     // This behavior changed in 48 and Super
-                    unimplemented_opcode_err(opcode);
+                    state->v[0xf] = state->v[y] & 1;
+                    state->v[x] = (state->v[y] >> 1);
                     break;
                 case 0x7:
                     // VX = VY - VX
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    vy = state->v[y];
+                    state->v[x] = (vy - vx) & 0xff;
                     break;
                 // No 0x8XY8 - 0x8XYd, or *f
                 case 0xe:
                     // Shifts VY left by one and stores in VX
+                    // SET VF to VY's pre shift MSB
                     // Like 0x8XY6, was patched in -48 and Super
-                    unimplemented_opcode_err(opcode);
+                    state->v[0xf] = (state->v[y] & 0x80) >> 7;
+                    state->v[x] = (state->v[y] << 1) & 0xff;
                     break;
                 default:
                     invalid_opcode(pc, opcode);
@@ -658,7 +667,128 @@ int test_suite(chip8_state *state)
     errors += test_op(state, test_no++, tested, 0x7e, dump);
 
 
+    // 0x8XY4: Increment VX by VY
+    printf("0x8XY4\n");
 
+    state->opcode = 0x8104;
+    state->v[1] = 0x32;
+    state->v[0] = 0x10;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x42, dump);
+
+    // with overflow:
+    state->opcode = 0x8104;
+    state->v[1] = 0x43;
+    state->v[0] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x42, dump);
+
+
+    // 0x8XY5: Decrement VX by VY
+    printf("0x8XY5\n");
+
+    state->opcode = 0x8105;
+    state->v[1] = 0x32;
+    state->v[0] = 0x10;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x22, dump);
+
+    // with underflow:
+    state->opcode = 0x8105;
+    state->v[1] = 0x43;
+    state->v[0] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x44, dump);
+
+
+    // 0x8XY6: Bitshift VY right by 1 and store in VX
+    // (I'm using original CHIP-8 rules)
+    // Store VY's LSB pre-shift in VF
+    printf("0x8XY6\n");
+
+    // LSB odd
+    state->opcode = 0x8106;
+    state->v[0] = 0xda;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x6d, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x00, dump);
+
+    // LSB even
+    state->opcode = 0x8106;
+    state->v[0] = 0xdb;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x6d, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x01, dump);
+
+    // VX 0xff
+    state->opcode = 0x8106;
+    state->v[0] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x7f, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x01, dump);
+
+
+    // 0x8XY7: Set VX to VY - VX
+    printf("0x8XY7\n");
+
+    state->opcode = 0x8017;
+    state->v[1] = 0x32;
+    state->v[0] = 0x10;
+    emulate_opcode(state);
+    tested = state->v[0];
+    errors += test_op(state, test_no++, tested, 0x22, dump);
+
+    // with underflow:
+    state->opcode = 0x8017;
+    state->v[1] = 0x43;
+    state->v[0] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[0];
+    errors += test_op(state, test_no++, tested, 0x44, dump);
+
+
+    // 0x8XYe: Bitshift VY left by 1 and store in VX
+    // (I'm using original CHIP-8 rules)
+    // Store VY's MSB pre-shift in VF
+    printf("0x8XYe\n");
+
+    // MSB odd, overflows
+    state->opcode = 0x810e;
+    state->v[0] = 0xda;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0xb4, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x01, dump);
+
+    // MSB even
+    state->opcode = 0x810e;
+    state->v[0] = 0x2b;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0x56, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x00, dump);
+
+    // VX 0xff
+    state->opcode = 0x810e;
+    state->v[0] = 0xff;
+    emulate_opcode(state);
+    tested = state->v[1];
+    errors += test_op(state, test_no++, tested, 0xfe, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, test_no++, tested, 0x01, dump);
+    
 
     return errors;
 }
