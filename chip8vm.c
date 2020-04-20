@@ -237,18 +237,24 @@ void emulate_opcode(chip8_state *state)
             break;
         // (Back to first nibble decoding)
         case 0x9:
+            // Skip next instruction if VX != VY
+            // opcode must end in 0 or isn't valid
             if ((opcode & 0xf) != 0)
                 invalid_opcode(pc, opcode);
-            // Otherwise, 0x9XY0 is skip next instruction if VX == VY
-            unimplemented_opcode_err(opcode);
+            // else
+            vx  = state->v[x];
+            vy  = state->v[y];
+            if (vx != vy)
+                state->pc += 2;
             break;
         case 0xa:
             // Set index register (I) to adress NNN
-            unimplemented_opcode_err(opcode);
+            state->index_reg = opcode & 0xfff;
             break;
         case 0xb:
             // Jump PC to address V0 + NNN
-            unimplemented_opcode_err(opcode);
+            vx = state->v[0];
+            state->pc = (vx + (opcode & 0xfff)) & 0xfff;
             break;
         case 0xc:
             // Set VX to random number between 0 and 255,

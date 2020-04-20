@@ -398,7 +398,48 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0xfe, dump);
     tested = state->v[0xf];
     errors += test_op(state, tested, 0x01, dump);
+
+
+    // 0x9XY0: Skip next instruction if VX != VY
+    printf("\n0x9XY0: ");
     
+    // test positive
+    state->opcode = 0x9ab0;
+    state->pc = 0x200;
+    state->v[0xa] = 0x44;
+    state->v[0xb] = 0x24;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, jumped, dump);
+
+    // test neg
+    state->opcode = 0x9fa0;
+    state->pc = 0x200;
+    state->v[0xa] = 0x9;
+    state->v[0xf] = 0x9;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x200, dump);
+    
+
+    // 0xANNN: Sets I (index register) to the address NNN
+    printf("\n0xaNNN :");
+    state->opcode = 0xaf34;
+    state->index_reg = 0x0;
+    emulate_opcode(state);
+    tested = state->index_reg;
+    errors += test_op(state, tested, 0xf34, dump);
+
+
+    // 0xBNNN: Jump (set PC) to address NNN + V0
+    // printf("\n0xbNNN: ");
+
+    state->opcode = 0xb100;
+    state->v[0] = 0x11;
+    state->pc = 0x0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x111, dump);
 
     printf("\n");
     return errors;
