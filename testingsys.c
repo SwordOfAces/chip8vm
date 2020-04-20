@@ -46,11 +46,11 @@ int test_suite(chip8_state *state)
     unsigned short jumped = 0x202;
 
 
-    // 0x0NNN: NO TESTS
+    // 0x0NNN: TODO
     
-    // 0x00e0: NO TESTS
+    // 0x00e0: TODO
     
-    // 0x00ee: NO TESTS
+    // 0x00ee: TODO
     
     
     // 0x1NNN: GOTO NNN
@@ -68,7 +68,7 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0xfff, dump);
 
 
-    // 0x2NNN: NO TESTS
+    // 0x2NNN: TODO
     
 
     // 0x3XNN:
@@ -459,6 +459,14 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x0fe, dump);
 
 
+    // 0xcXNN: Set VX to bitwise and of NN and random value 0-255
+    // TODO
+    //
+    // 0xdXYN: Display TODO
+    //
+    // 0xeX9e: keyop TODO
+    // 0xeXa1: keyop TODO
+
     // 0xfX07: Set VX to value of delay timer
     printf("\n0xfX07: ");
     state->opcode = 0xf207;
@@ -469,6 +477,9 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x40, dump);
 
 
+    // fx0a keyop TODO
+
+
     // 0xfX15: Set delay timer to value in VX
     printf("\n0xfX15: ");
     state->opcode = 0xf215;
@@ -477,6 +488,7 @@ int test_suite(chip8_state *state)
     emulate_opcode(state);
     tested = state->delay_timer;
     errors += test_op(state, tested, 0x40, dump);
+
 
 
     printf("\n");
