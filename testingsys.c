@@ -459,7 +459,13 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x0fe, dump);
 
 
-
+    // 0xfX07: Set VX to value of delay timer
+    state->opcode = 0xf207;
+    state->v[2] = 0xff;
+    state->delay_timer = 0x40;
+    emulate_opcode(state);
+    tested = state->v[2];
+    errors += test_op(state, tested, 0x40, dump);
 
 
     printf("\n");

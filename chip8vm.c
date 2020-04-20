@@ -282,8 +282,8 @@ void emulate_opcode(chip8_state *state)
             switch (opcode & 0xff)
             {
                 case 0x07:
-                    // Set VX to value of delay timer
-                    unimplemented_opcode_err(opcode);
+                    // 0xfX07: Set VX to value of delay timer
+                    state->v[x] = state->delay_timer;
                     break;
                 case 0x0a:
                     // Wait for keypress, then store it in VX
@@ -291,7 +291,7 @@ void emulate_opcode(chip8_state *state)
                     unimplemented_opcode_err(opcode);
                     break;
                 case 0x15:
-                    // Set delay timer to VX
+                    // 0xfX15: Set delay timer to VX
                     unimplemented_opcode_err(opcode);
                     break;
                 case 0x18:
