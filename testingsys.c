@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "chip8vm.h"
-#include "test.h"
+#include "testingsys.h"
 
 int test_op(chip8_state *state,
         unsigned short t_val, unsigned short e_val, char dump)
