@@ -460,11 +460,22 @@ int test_suite(chip8_state *state)
 
 
     // 0xfX07: Set VX to value of delay timer
+    printf("\n0xfX07: ");
     state->opcode = 0xf207;
     state->v[2] = 0xff;
     state->delay_timer = 0x40;
     emulate_opcode(state);
     tested = state->v[2];
+    errors += test_op(state, tested, 0x40, dump);
+
+
+    // 0xfX15: Set delay timer to value in VX
+    printf("\n0xfX15: ");
+    state->opcode = 0xf215;
+    state->v[2] = 0x40;
+    state->delay_timer = 0xff;
+    emulate_opcode(state);
+    tested = state->delay_timer;
     errors += test_op(state, tested, 0x40, dump);
 
 

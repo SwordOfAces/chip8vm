@@ -292,7 +292,7 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x15:
                     // 0xfX15: Set delay timer to VX
-                    unimplemented_opcode_err(opcode);
+                    state->delay_timer = state->v[x];
                     break;
                 case 0x18:
                     // Set sound timer to VX
