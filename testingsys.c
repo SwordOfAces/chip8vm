@@ -471,7 +471,7 @@ int test_suite(chip8_state *state)
 
 
     // 0xfX1e: Increment I by VX, set VF to 1 if overflow, else 0
-    printf("\n0xfX18: ");
+    printf("\n0xfX1e: ");
     // No overflow:
     state->opcode = 0xf21e;
     state->v[2] = 0x40;
