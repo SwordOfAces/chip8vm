@@ -490,6 +490,19 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x40, dump);
 
 
+    // 0xfX18: Set sound timer to VX
+    printf("\n0xfX18: ");
+    state->opcode = 0xf218;
+    state->v[2] = 0x40;
+    state->sound_timer = 0xff;
+    emulate_opcode(state);
+    tested = state->sound_timer;
+    errors += test_op(state, tested, 0x40, dump);
+
+
+
+
+
 
     printf("\n");
     return errors;
