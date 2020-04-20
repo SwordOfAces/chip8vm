@@ -500,6 +500,31 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x40, dump);
 
 
+    // 0xfX1e: Increment I by VX, set VF to 1 if overflow, else 0
+    printf("\n0xfX18: ");
+
+    // No overflow:
+    state->opcode = 0xf21e;
+    state->v[2] = 0x40;
+    state->index_reg = 0x002;
+    emulate_opcode(state);
+    tested = state->index_reg;
+    errors += test_op(state, tested, 0x42, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, tested, 0x0, dump);
+
+    // Overflow large I:
+    state->opcode = 0xf21e;
+    state->v[2] = 0x40;
+    state->index_reg = 0xfff;
+    emulate_opcode(state);
+    tested = state->index_reg;
+    errors += test_op(state, tested, 0x03f, dump);
+    tested = state->v[0xf];
+    errors += test_op(state, tested, 0x1, dump);
+
+
+
 
 
 

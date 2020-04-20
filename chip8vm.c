@@ -300,7 +300,11 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x1e:
                     // Add VX to I Set VF to if overflowed
-                    unimplemented_opcode_err(opcode);
+                    vx = state->v[x];
+                    state->index_reg = state->index_reg + vx;
+                    // I > 0xfff iff overflow happened
+                    state->v[0xf] = state->index_reg > 0xfff ? 1 : 0;
+                    state->index_reg &= 0xfff;
                     break;
                 case 0x29:
                     // sets I to the built-in sprite address for the
