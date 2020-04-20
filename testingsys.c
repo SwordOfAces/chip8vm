@@ -525,6 +525,10 @@ int test_suite(chip8_state *state)
 
 
 
+    // fX29: set I to address for sprite of value in VX TODO
+    // fX33: store BCD of VX starting at I TODO
+    // fx55: register dump TODO
+    // fx65: register load TODO
 
 
 
