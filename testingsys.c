@@ -423,7 +423,7 @@ int test_suite(chip8_state *state)
     
 
     // 0xANNN: Sets I (index register) to the address NNN
-    printf("\n0xaNNN :");
+    printf("\n0xaNNN: ");
     state->opcode = 0xaf34;
     state->index_reg = 0x0;
     emulate_opcode(state);
@@ -432,14 +432,35 @@ int test_suite(chip8_state *state)
 
 
     // 0xBNNN: Jump (set PC) to address NNN + V0
-    // printf("\n0xbNNN: ");
+    printf("\n0xbNNN: ");
 
+    // Straightforward:
     state->opcode = 0xb100;
     state->v[0] = 0x11;
     state->pc = 0x0;
     emulate_opcode(state);
     tested = state->pc;
     errors += test_op(state, tested, 0x111, dump);
+
+    // large NNN
+    state->opcode = 0xbfff;
+    state->v[0] = 0x11;
+    state->pc = 0x0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x010, dump);
+
+    // large V0 and NNN
+    state->opcode = 0xbfff;
+    state->v[0] = 0xff;
+    state->pc = 0x0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x0fe, dump);
+
+
+
+
 
     printf("\n");
     return errors;
