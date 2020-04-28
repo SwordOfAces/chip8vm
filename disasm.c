@@ -81,13 +81,13 @@ int main(int argc, char *argv[]){
                 break;
             case 0x3:
                 // Skip next instruction if VX == NN
-                printf("TEQ V%x $%02x\n",
+                printf("TEQ.I V%x $%02x\n",
                         (opcode & 0xf00) >> 8,
                         opcode & 0xff);
                 break;
             case 0x4:
                 // Skip next instruction if VX != NN
-                printf("TNE V%x $%02x\n",
+                printf("TNE.I V%x $%02x\n",
                         (opcode & 0xf00) >> 8,
                         opcode & 0xff);
                 break;
