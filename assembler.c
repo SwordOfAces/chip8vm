@@ -262,7 +262,7 @@ int conv_hex_str(char *str, int len)
 {
     char sub[len];
     strncpy(sub, str, len);
-    return strtol(str, NULL, 16);
+    return strtol(sub, NULL, 16);
 }
 
 void write_op(unsigned short opcode, FILE *outfile)
