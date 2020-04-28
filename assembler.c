@@ -267,7 +267,8 @@ int conv_hex_str(char *str, int len)
 
 void write_op(unsigned short opcode, FILE *outfile)
 {
-    printf("%04x\n", opcode);
+    // Useful while writing, and for creating file to test with
+    // printf("%04x\n", opcode);
     unsigned char msb = (opcode & 0xff00) >> 8;
     unsigned char lsb = opcode & 0xff;
     fputc(msb, outfile);
