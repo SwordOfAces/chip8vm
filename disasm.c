@@ -102,13 +102,13 @@ int main(int argc, char *argv[]){
                 break;
             case 0x6:
                 // Sets VX to NN
-                printf("MOV V%x $%02x\n",
+                printf("MOV.I V%x $%02x\n",
                         (opcode & 0xf00) >> 8,
                         opcode & 0xff);
                 break;
             case 0x7:
                 // Increment VX by NN
-                printf("ADD V%x $%02x\n",
+                printf("INC.I V%x $%02x\n",
                         (opcode & 0xf00) >> 8,
                         opcode & 0xff);
                 break;
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]){
                 {
                     case 0x0:
                         // Assign VX value in VY
-                        printf("MOV V%x V%x\n",
+                        printf("MOV.V V%x V%x\n",
                                 (opcode & 0xf00) >> 8,
                                 (opcode & 0xf0) >> 4);
                         break;
@@ -143,7 +143,7 @@ int main(int argc, char *argv[]){
                         break;
                     case 0x4:
                         // Increment VX by VY
-                        printf("ADD V%x V%x\n",
+                        printf("INC.V V%x V%x\n",
                                 (opcode & 0xf00) >> 8,
                                 (opcode & 0xf0) >> 4);
                         break;
@@ -156,7 +156,7 @@ int main(int argc, char *argv[]){
                     case 0x6:
                         // Shift VY right by one and set into VX
                         // This behavior changed in 48 and Super
-                        printf("SHR V%x, V%x\n",
+                        printf("SHR V%x V%x\n",
                                 (opcode & 0xf00) >> 8,
                                 (opcode & 0xf0) >> 4);
                         break;
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]){
                 break;
             case 0xa:
                 // Set index register (I) to adress NNN
-                printf("MOV I $%03x\n", opcode & 0xfff);
+                printf("INDEX $%03x\n", opcode & 0xfff);
                 break;
             case 0xb:
                 // Jump PC to address V0 + NNN
@@ -207,7 +207,7 @@ int main(int argc, char *argv[]){
                 // 0xdXYN
                 // Draw sprite of N height at address in I
                 // to coords VX, VY (all sprites are 8 bits wide)
-                printf("DRAW V%x V%x $%x\n",
+                printf("DRAW V%x V%x %x\n",
                         (opcode & 0xf00) >> 8,
                         (opcode & 0xf0) >> 4,
                         opcode & 0xf);
@@ -218,7 +218,7 @@ int main(int argc, char *argv[]){
                     printf("TKEY V%x\n", (opcode & 0xf00) >> 8);
                 // Skip next instruction if key NOT pressed:
                 else if ((opcode & 0xff) == 0xa1)
-                    printf("TNOKEY V%x\n", (opcode & 0xf00) >> 8);
+                    printf("TNKEY V%x\n", (opcode & 0xf00) >> 8);
                 else
                     invalid_opcode(pc, opcode);
                 break;
@@ -228,7 +228,7 @@ int main(int argc, char *argv[]){
                 {
                     case 0x07:
                         // Set VX to value of delay timer
-                        printf("MOV V%x DT\n", (opcode & 0xf00) >> 8);
+                        printf("SET.DT V%x\n", (opcode & 0xf00) >> 8);
                         break;
                     case 0x0a:
                         // Wait for keypress, then store it in VX
@@ -237,20 +237,20 @@ int main(int argc, char *argv[]){
                         break;
                     case 0x15:
                         // Set delay timer to VX
-                        printf("MOV DT V%x\n", (opcode & 0xf00) >> 8);
+                        printf("GET.DT V%x\n", (opcode & 0xf00) >> 8);
                         break;
                     case 0x18:
                         // Set sound timer to VX
-                        printf("MOV ST V%x\n", (opcode & 0xf00) >> 8);
+                        printf("SET.ST V%x\n", (opcode & 0xf00) >> 8);
                         break;
                     case 0x1e:
                         // Add VX to I Set VF to if overflowed
-                        printf("ADD I V%x\n", (opcode & 0xf00) >> 8);
+                        printf("IADD V%x\n", (opcode & 0xf00) >> 8);
                         break;
                     case 0x29:
                         // sets I to the built-in sprite address for the
                         // character stored in VX
-                        printf("GETFONT V%x\n", (opcode & 0xf00) >> 8);
+                        printf("FONT V%x\n", (opcode & 0xf00) >> 8);
                         break;
                     case 0x33:
                         // Stores BCD of VX starting at I
