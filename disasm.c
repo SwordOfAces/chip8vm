@@ -7,11 +7,11 @@ void invalid_opcode(int address, unsigned short opcode);
 int main(int argc, char *argv[]){
     if (argc < 2)
     {
-        printf("Usage: chip8vm <romfile> [offset]\n");
+        printf("Usage: disasm <romfile> [offset]\n");
         exit(1);
     }
 
-    // start disassembling from different offset
+    // able to start disassembling from different offset
     // helpful to begin disassembly again after finding data
     int offset = 0;
     if (argc == 3)
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]){
         exit(1);
     }
     // determine length of program data:
-    // add 0x200 for reserved memory
+    // add 0x200 for starting after reserved memory
     fseek(romfile, 0L, SEEK_END);
     int end_byte = ftell(romfile) + 0x200;
     fseek(romfile, 0L, SEEK_SET);
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
 
     fclose(romfile);
 
-    // Dump our memory contents to the console (TEMP)
+    // Dump our memory contents to the console
     printf("0x000 - 0x1ff: intended to be reserved\n");
     printf("Offset from 0x200 is: %3x\n", offset);
     int pc = 0x200 + offset;
