@@ -48,13 +48,6 @@ int main(int argc, char *argv[]){
         // Can't use a switch with strings, so if-else if-else ladder
         // Compare strings by their first few characters
         // Enough to guarantee correct, not enough to get to args
-        else if (strncmp(line, "OR", 2) == 0)
-        {
-            x = conv_hex_str(&line[4], 1);
-            y = conv_hex_str(&line[7], 1);
-            opcode = 0x8001 + (x * 0x100) + (y * 0x10);
-        }
-        // From here, can examine first 5 chars, handled by opcode order:
         else if (strncmp(line, "CALLPROG", 5) == 0)
         {
             addr = conv_hex_str(&line[10], 3);
@@ -106,10 +99,153 @@ int main(int argc, char *argv[]){
             val = conv_hex_str(&line[10], 2);
             opcode = 0x7000 + (x * 0x100) + val;
         }
+        else if (strncmp(line, "MOV.V", 5) == 0)
+        {
+            x = conv_hex_str(&line[7], 1);
+            y = conv_hex_str(&line[10], 1);
+            opcode = 0x8000 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "OR", 2) == 0)
+        {
+            x = conv_hex_str(&line[4], 1);
+            y = conv_hex_str(&line[7], 1);
+            opcode = 0x8001 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "AND", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x8002 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "XOR", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x8003 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "INC.V", 5) == 0)
+        {
+            x = conv_hex_str(&line[7], 1);
+            y = conv_hex_str(&line[10], 1);
+            opcode = 0x8004 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "SUB", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x8005 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "SHR", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x8006 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "LESS", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            y = conv_hex_str(&line[9], 1);
+            opcode = 0x8007 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "SHL", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x800e + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "TNE ", 4) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            y = conv_hex_str(&line[8], 1);
+            opcode = 0x9000 + (x * 0x100) + (y * 0x10);
+        }
+        else if (strncmp(line, "INDEX", 5) == 0)
+        {
+            addr = conv_hex_str(&line[7], 3);
+            opcode = 0xa000 + addr;
+        }
+        else if (strncmp(line, "JMPOFF", 6) == 0)
+        {
+            addr = conv_hex_str(&line[8], 3);
+            opcode = 0xb000 + addr;
+        }
+        else if (strncmp(line, "RAND", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            val = conv_hex_str(&line[9], 2);
+            opcode = 0xc000 + (x * 0x100) + val;
+        }
+        else if (strncmp(line, "DRAW", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            y = conv_hex_str(&line[9], 1);
+            val = conv_hex_str(&line[11], 1);
+            opcode = 0xd000 + (x * 0x100) + (y * 0x10) + val;
+        }
+        else if (strncmp(line, "TKEY", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            opcode = 0xe09e + (x * 0x100);
+        }
+        else if (strncmp(line, "TNKEY", 5) == 0)
+        {
+            x = conv_hex_str(&line[7], 1);
+            opcode = 0xe0a1 + (x * 0x100);
+        }
+        else if (strncmp(line, "SET.DT", 6) == 0)
+        {
+            x = conv_hex_str(&line[8], 1);
+            opcode = 0xf007 + (x * 0x100);
+        }
+        else if (strncmp(line, "GETKEY", 6) == 0)
+        {
+            x = conv_hex_str(&line[8], 1);
+            opcode = 0xf00a + (x * 0x100);
+        }
+        else if (strncmp(line, "GET.DT", 6) == 0)
+        {
+            x = conv_hex_str(&line[8], 1);
+            opcode = 0xf015 + (x * 0x100);
+        }
+        else if (strncmp(line, "SET.ST", 6) == 0)
+        {
+            x = conv_hex_str(&line[8], 1);
+            opcode = 0xf018 + (x * 0x100);
+        }
+        else if (strncmp(line, "IADD", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            opcode = 0xf01e + (x * 0x100);
+        }
+        else if (strncmp(line, "FONT", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            opcode = 0xf029 + (x * 0x100);
+        }
+        else if (strncmp(line, "BCD", 3) == 0)
+        {
+            x = conv_hex_str(&line[5], 1);
+            opcode = 0xf033 + (x * 0x100);
+        }
+        else if (strncmp(line, "STORE", 5) == 0)
+        {
+            x = conv_hex_str(&line[7], 1);
+            opcode = 0xf055 + (x * 0x100);
+        }
+        else if (strncmp(line, "LOAD", 4) == 0)
+        {
+            x = conv_hex_str(&line[6], 1);
+            opcode = 0xf065 + (x * 0x100);
+        }
+        // If it doesnt match anything above, we've got a bad line
+        else
+            invalid_line(line, line_no);
 
-
+        // Now, we should have an opcode, so write it to the file
         write_op(opcode, outfile);
     }
+
+    // We've reached the end of our code file, so close both files
     fclose(codefile); 
     fclose(outfile);
 }
