@@ -183,8 +183,8 @@ int main(int argc, char *argv[]){
                 {
                     invalid_opcode(pc, opcode);
                 }
-                // Otherwise, 0x9XY0 is skip next instruction if VX == VY
-                printf("TEQ V%x V%x\n",
+                // Otherwise, 0x9XY0 is skip next instruction if VX != VY
+                printf("TNE V%x V%x\n",
                         (opcode & 0xf00) >> 8,
                         (opcode & 0xf0) >> 4);
                 break;
