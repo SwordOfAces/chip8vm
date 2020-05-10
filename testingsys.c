@@ -50,7 +50,7 @@ int test_suite(chip8_state *state)
 
     // 0x0NNN: TODO
     
-    // 0x00e0: TODO
+    // 0x00e0: Return from subroutine
     
     // 0x00ee: TODO
     
@@ -75,13 +75,13 @@ int test_suite(chip8_state *state)
     state->opcode = 0x2145;
     state->pc = 0x200;
     state->sp = 0xf;
-    state->stack[0xf] = 0;
+    state->stack[0xe] = 0;
     emulate_opcode(state);
     tested = state->pc;
     errors += test_op(state, tested, 0x145, dump);
     tested = state->sp;
     errors += test_op(state, tested, 0xe, dump);
-    tested = state->stack[0xf];
+    tested = state->stack[0xe];
     errors += test_op(state, tested, 0x200, dump);
     // decrementing sp == 0
     state->opcode = 0x2245;
@@ -93,7 +93,7 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0x245, dump);
     tested = state->sp;
     errors += test_op(state, tested, 0xf, dump);
-    tested = state->stack[0x0];
+    tested = state->stack[0xf];
     errors += test_op(state, tested, 0x201, dump);
     // overwriting stack
     state->opcode = 0x2354;
@@ -106,7 +106,7 @@ int test_suite(chip8_state *state)
     tested = state->sp;
     errors += test_op(state, tested, 0xf, dump);
     tested = state->stack[0xf];
-    errors += test_op(state, tested, 0x202, dump);
+    errors += test_op(state, tested, 0x300, dump);
 
     // 0x3XNN:
     // Skip next instruction if value in VX == NN

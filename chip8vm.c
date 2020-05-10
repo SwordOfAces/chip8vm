@@ -136,8 +136,8 @@ void emulate_opcode(chip8_state *state)
             break;
         case 0x2:
             // 2NNN: Call subroutine
-            state->stack[state->sp] = state->pc;
             state->sp == 0 ? state->sp = 0xf : state->sp--;
+            state->stack[state->sp] = state->pc;
             state->pc = opcode & 0xfff;
             break;
         case 0x3:
