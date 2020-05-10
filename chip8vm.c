@@ -58,7 +58,7 @@ chip8_state * create_state(void)
     // and graphics will undoubtably be immediately cleared with 0x00e0 op 
     memset(state->memory, 0, sizeof(state->memory));
     state->pc = 0x200;
-    state->sp = 0x0;
+    state->sp = 0xf;
     memset(state->key, 0, sizeof(state->key));
     return state;
 }
@@ -135,8 +135,10 @@ void emulate_opcode(chip8_state *state)
             state->pc = opcode & 0xfff;
             break;
         case 0x2:
-            // Call subroutine
-            unimplemented_opcode_err(opcode);
+            // 2NNN: Call subroutine
+            state->stack[state->sp] = state->pc;
+            state->sp == 0 ? state->sp = 0xf : state->sp--;
+            state->pc = opcode & 0xfff;
             break;
         case 0x3:
             // Skip next instruction if VX == NN

@@ -70,7 +70,43 @@ int test_suite(chip8_state *state)
 
 
     // 0x2NNN: TODO
-    
+    printf("\n0x2NNN: ");
+    // Most normal:
+    state->opcode = 0x2145;
+    state->pc = 0x200;
+    state->sp = 0xf;
+    state->stack[0xf] = 0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x145, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0xe, dump);
+    tested = state->stack[0xf];
+    errors += test_op(state, tested, 0x200, dump);
+    // decrementing sp == 0
+    state->opcode = 0x2245;
+    state->pc = 0x201;
+    state->sp = 0x0;
+    state->stack[0xf] = 0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x245, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0xf, dump);
+    tested = state->stack[0x0];
+    errors += test_op(state, tested, 0x201, dump);
+    // overwriting stack
+    state->opcode = 0x2354;
+    state->pc = 0x300;
+    state->sp = 0x0;
+    state->stack[0xf] = 0x202;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x354, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0xf, dump);
+    tested = state->stack[0xf];
+    errors += test_op(state, tested, 0x202, dump);
 
     // 0x3XNN:
     // Skip next instruction if value in VX == NN
