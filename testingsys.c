@@ -50,7 +50,7 @@ int test_suite(chip8_state *state)
 
     // 0x0NNN: TODO
     
-    // 0x00ee: TODO
+    // 0x00e0: TODO
     
     // 0x00ee: Return from subroutine
     printf("\n0x00ee: ");
