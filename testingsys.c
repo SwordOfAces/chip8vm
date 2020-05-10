@@ -48,9 +48,10 @@ int test_suite(chip8_state *state, unsigned char dump)
     unsigned short jumped = 0x202;
 
 
-    // 0x0NNN: TODO
+    // 0x0NNN: todon't
     
-    // 0x00e0: TODO
+    // 0x00e0: TODO clear display (could do but not *really* verify)
+    // also may change gfx set up for better sdl fit
     
     // 0x00ee: Return from subroutine
     printf("\n0x00ee: ");
@@ -89,7 +90,7 @@ int test_suite(chip8_state *state, unsigned char dump)
     errors += test_op(state, tested, 0xfff, dump);
 
 
-    // 0x2NNN: TODO
+    // 0x2NNN:
     printf("\n0x2NNN: ");
     // Most normal:
     state->opcode = 0x2145;
