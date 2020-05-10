@@ -50,14 +50,34 @@ int test_suite(chip8_state *state)
 
     // 0x0NNN: TODO
     
-    // 0x00e0: Return from subroutine
-    
     // 0x00ee: TODO
     
+    // 0x00ee: Return from subroutine
+    printf("\n0x00ee: ");
+    // Basic test
+    state->opcode = 0x00ee;
+    state->sp = 0x4;
+    state->stack[state->sp] = 0x391;
+    state->pc = 0x500;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x391, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0x5, dump);
+    // sp overflow
+    state->opcode = 0x00ee;
+    state->sp = 0xf;
+    state->stack[state->sp] = 0x393;
+    state->pc = 0x503;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x393, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0x0, dump);
     
     // 0x1NNN: GOTO NNN
     // needs to set PC to NNN 
-    printf("0x1NNN: ");
+    printf("\n0x1NNN: ");
     state->opcode = 0x1234;
     emulate_opcode(state);
     tested = state->pc;
@@ -107,6 +127,28 @@ int test_suite(chip8_state *state)
     errors += test_op(state, tested, 0xf, dump);
     tested = state->stack[0xf];
     errors += test_op(state, tested, 0x300, dump);
+
+    // integrating 0x2NNN with 0x00ee (return)
+    // And with the 0xf/0x0 boundary
+    printf("\n0x2NNN & 0x00ee: ");
+    state->opcode = 0x2356;
+    state->pc = 0x302;
+    state->sp = 0x0;
+    state->stack[0xf] = 0x202;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x356, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0xf, dump);
+    tested = state->stack[0xf];
+    errors += test_op(state, tested, 0x302, dump);
+    state->opcode = 0x00ee;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x302, dump);
+    tested = state->sp;
+    errors += test_op(state, tested, 0x0, dump);
+    
 
     // 0x3XNN:
     // Skip next instruction if value in VX == NN

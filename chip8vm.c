@@ -124,8 +124,11 @@ void emulate_opcode(chip8_state *state)
                 // Clear screen
                 unimplemented_opcode_err(opcode);
             else if (opcode == 0x00ee)
-                // Return from subroutine
-                unimplemented_opcode_err(opcode);
+            {
+                // 0x00ee: Return from subroutine
+                state->pc = state->stack[state->sp];
+                state->sp == 0xf ? state->sp = 0x0 : state->sp++;
+            }
             else
                 // Call RCA 1802 program (probably don't need)
                 unimplemented_opcode_err(opcode);
