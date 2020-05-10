@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]){
     // Ensure that we're being used with what we'll assume is a romfile
-    if (argc != 2)
+    if (argc < 2)
     {
         printf("Usage: chip8vm <romfile>\n");
         exit(1);
@@ -20,7 +20,12 @@ int main(int argc, char *argv[]){
     // Run tests with -t
     if (strcmp(argv[1], "-t") == 0)
     {
-        int errors = test_suite(state);
+        // dump is 0 or 1, on whether to dump memory & state on test failure
+        // 0 by default, and except in case of positive match.
+        unsigned char dump = 0;
+        if (argc >= 3 && strcmp(argv[2], "1") == 0)
+            dump = 1;
+        int errors = test_suite(state, dump);
         printf("TOTAL ERRORS: %i\n", errors);
         exit(0);
     }

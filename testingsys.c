@@ -31,13 +31,13 @@ int test_op(chip8_state *state,
 
 // Just a big battery of tests in sequence. 
 // Set important values & opcode, emulate, test result
-int test_suite(chip8_state *state)
+// dump: whether to dump memory & state on failed test, 0 or 1
+int test_suite(chip8_state *state, unsigned char dump)
 {
     unsigned short tested;
     // if i need more than this i am a) testing way too much
     // and b) and yet doing a horrible job
     unsigned char errors = 0;
-    unsigned char dump = 0;
 
     // Notes:
     // remember to set everything related to the test,
