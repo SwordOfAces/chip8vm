@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h> // for memset, memcpy
+#include <time.h> // for seeding rand
 
 #include "chip8vm.h"
 #include "testingsys.h"
@@ -53,6 +54,7 @@ int main(int argc, char *argv[]){
 
 chip8_state * create_state(void)
 {
+    srand(time(0));
     //  Create a pointer to a state, so we can modify it in functions
     chip8_state *state = malloc(sizeof(chip8_state));
     // Initialize important fields
@@ -269,8 +271,8 @@ void emulate_opcode(chip8_state *state)
             break;
         case 0xc:
             // 0xcXNN: Set VX to random number between 0 and 255,
-            // bitmasked with NN
-            unimplemented_opcode_err(opcode);
+            // bitmasked by AND with NN
+            state->v[x] = (rand() % 256) & (opcode & 0xff);
             break;
         case 0xd:
             // 0xdXYN:

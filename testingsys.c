@@ -508,7 +508,36 @@ int test_suite(chip8_state *state, unsigned char dump)
 
 
     // 0xcXNN: Set VX to bitwise and of NN and random value 0-255
-    // TODO
+    printf("\n0xcNNN (note, random): ");
+    // With & 0xff
+    state->opcode = 0xcbff;
+    state->v[0xb] = 0;
+    printf("\n\twith 0xff: ");
+    for (int i = 0; i < 5; i++)
+    {
+        emulate_opcode(state);
+        printf("%02x ", state->v[0xb]);
+    }
+    // With & 0xaa
+    state->opcode = 0xcbaa;
+    state->v[0xb] = 0;
+    printf("\n\twith 0xaa: ");
+    for (int i = 0; i < 5; i++)
+    {
+        emulate_opcode(state);
+        printf("%02x ", state->v[0xb]);
+    }
+    // With & 0x00
+    state->opcode = 0xcb00;
+    state->v[0xb] = 0;
+    printf("\n\twith 0x00: ");
+    for (int i = 0; i < 5; i++)
+    {
+        emulate_opcode(state);
+        printf("%02x ", state->v[0xb]);
+    }
+
+
     //
     // 0xdXYN: Display TODO
     //
