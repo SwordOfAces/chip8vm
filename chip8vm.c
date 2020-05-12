@@ -322,11 +322,18 @@ void emulate_opcode(chip8_state *state)
                 case 0x29:
                     // 0xfX29: sets I to the built-in sprite address for the
                     // character stored in VX
-                    unimplemented_opcode_err(opcode);
+                    // sprite for char 0xX starts at 0x50 + 0x5 * X
+                    state->index_reg = 0x50 + (0x5 * state->v[x]);
                     break;
                 case 0x33:
                     // 0xfX33: Stores BCD of VX starting at I
-                    unimplemented_opcode_err(opcode);
+                    // eg, if opcode is 0xfa33, and VA holds 0xff
+                    // then put 0x2 in I, 0x5 in I+1, and 0x5 in I+2
+                    state->memory[state->index_reg + 2] = state->v[x] % 10;
+                    state->v[x] /= 10;
+                    state->memory[state->index_reg + 1] = state->v[x] % 10;
+                    state->v[x] /= 10;
+                    state->memory[state->index_reg] = state->v[x];
                     break;
                 case 0x55:
                     // 0xfX55: Stores registers V0 to & incl. VX into memory

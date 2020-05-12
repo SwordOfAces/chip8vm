@@ -582,7 +582,7 @@ int test_suite(chip8_state *state, unsigned char dump)
     printf("\n0xfX1e: ");
     // No overflow:
     state->opcode = 0xf21e;
-    state->v[2] = 0x40;
+    state->v[0x2] = 0x40;
     state->index_reg = 0x002;
     emulate_opcode(state);
     tested = state->index_reg;
@@ -591,7 +591,7 @@ int test_suite(chip8_state *state, unsigned char dump)
     errors += test_op(state, tested, 0x0, dump);
     // Overflow large I:
     state->opcode = 0xf21e;
-    state->v[2] = 0x40;
+    state->v[0x2] = 0x40;
     state->index_reg = 0xfff;
     emulate_opcode(state);
     tested = state->index_reg;
@@ -602,7 +602,72 @@ int test_suite(chip8_state *state, unsigned char dump)
 
 
     // fX29: set I to address for sprite of value in VX TODO
+    printf("\n0xfX29: ");
+    // V[0xf] containing 0x0
+    state->opcode = 0xff29;
+    state->v[0xf] = 0x00;
+    state->index_reg = 0x002;
+    emulate_opcode(state);
+    tested = state->index_reg;
+    errors += test_op(state, tested, 0x050, dump);
+    // V[0x2] containing 0xe
+    state->opcode = 0xf229;
+    state->v[0x2] = 0x0e;
+    state->index_reg = 0x004;
+    emulate_opcode(state);
+    tested = state->index_reg;
+    errors += test_op(state, tested, 0x096, dump);
+
     // fX33: store BCD of VX starting at I TODO
+    printf("\n0xfX33: ");
+    // 132 in 0xa
+    state->opcode = 0xfa33;
+    state->v[0xa] = 0x84; // 132 in decimal
+    state->index_reg = 0x400;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, 0x1, dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0x3, dump);
+    tested = state->memory[state->index_reg + 2];
+    errors += test_op(state, tested, 0x2, dump);
+    // zeroes in value
+    state->opcode = 0xfb33;
+    state->v[0xb] = 0x19; // 25 in decimal
+    state->index_reg = 0x400;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, 0x0, dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0x2, dump);
+    tested = state->memory[state->index_reg + 2];
+    errors += test_op(state, tested, 0x5, dump);
+    // zero value
+    state->opcode = 0xfb33;
+    state->v[0xb] = 0x0; // 0 in decimal
+    state->index_reg = 0x400;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, 0x0, dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0x0, dump);
+    tested = state->memory[state->index_reg + 2];
+    errors += test_op(state, tested, 0x0, dump);
+    // zero value
+    state->opcode = 0xfb33;
+    state->v[0xb] = 0xff; // 255 in decimal
+    state->index_reg = 0x400;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, 0x2, dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0x5, dump);
+    tested = state->memory[state->index_reg + 2];
+    errors += test_op(state, tested, 0x5, dump);
+
+
+
+
     // fx55: register dump TODO
     // fx65: register load TODO
 
