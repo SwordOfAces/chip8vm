@@ -714,8 +714,61 @@ int test_suite(chip8_state *state, unsigned char dump)
     errors += test_op(state, tested, 0xdd, dump);
 
 
-
     // fx65: register load TODO
+    printf("\n0xfX65: ");
+    // Luckily for testing ease, we can reuse that same vals array
+    // and use the memory values we stored in testing 0xfX55 (which is how
+    // the two opcodes will be used, in addition). We just have to clear
+    // the registers each time
+    // Empty the registers
+    for (int i = 0; i <= 0xf; i++)
+    {
+        state->v[i] = 0x0;
+    }
+    // Partial load
+    printf("\n\tSome Regs: ");
+    state->opcode = 0xf865;
+    state->index_reg = 0x500;
+    // Set the memory address on the bound so we know if we overshot
+    state->memory[state->index_reg + 0x9] = 0xee;
+    emulate_opcode(state);
+    for (int i = 0; i <= 0x8; i++)
+    {
+        tested = state->memory[state->index_reg + i];
+        errors += test_op(state, tested, vals[i], dump);
+    }
+    tested = state->memory[state->index_reg + 0x9];
+    errors += test_op(state, tested, 0xee, dump);
+    // Full load
+    printf("\n\tAll Regs: ");
+    // Empty the registers
+    for (int i = 0; i <= 0xf; i++)
+    {
+        state->v[i] = 0x0;
+    }
+    state->opcode = 0xff65;
+    state->index_reg = 0x200;
+    emulate_opcode(state);
+    for (int i = 0; i <= 0xf; i++)
+    {
+        tested = state->memory[state->index_reg + i];
+        errors += test_op(state, tested, vals[i], dump);
+    }
+    // One load
+    // Empty the registers
+    for (int i = 0; i <= 0xf; i++)
+    {
+        state->v[i] = 0x0;
+    }
+    printf("\n\t0 Reg: ");
+    state->opcode = 0xf065;
+    state->index_reg = 0x250;
+    state->memory[state->index_reg + 1] = 0xdd;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, vals[0], dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0xdd, dump);
 
 
 

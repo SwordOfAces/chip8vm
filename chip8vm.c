@@ -350,7 +350,12 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x65:
                     // 0xfX65: Loads registers v0 to & incl. VX from memory
-                    unimplemented_opcode_err(opcode);
+                    // Starting by loading V0 from address stored in I
+                    // then V[N] from I + N
+                    for (int i = 0; i <= x; i++)
+                    {
+                        state->v[i] = state->memory[state->index_reg + i];
+                    }
                     break;
                 default:
                     // Invalid opcode starting with 0xf
