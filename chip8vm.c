@@ -130,6 +130,10 @@ void emulate_opcode(chip8_state *state)
         case 0x0:
             if (opcode == 0x00e0)
                 // 0x00e0: Clear screen
+                // This should do it, though is not tested yet
+                // unlikely to change from any change in SDL details
+                // really that'd be the point
+                // memset(state->memory, 0, sizeof(state->memory));
                 unimplemented_opcode_err(opcode);
             else if (opcode == 0x00ee)
             {
