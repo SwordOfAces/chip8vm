@@ -341,7 +341,12 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x55:
                     // 0xfX55: Stores registers V0 to & incl. VX into memory
-                    unimplemented_opcode_err(opcode);
+                    // Starting by storing V0 at address stored in I
+                    // then V[N] at I + N
+                    for (int i = 0; i <= x; i++)
+                    {
+                        state->memory[state->index_reg + i] = state->v[i];
+                    }
                     break;
                 case 0x65:
                     // 0xfX65: Loads registers v0 to & incl. VX from memory

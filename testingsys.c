@@ -666,9 +666,55 @@ int test_suite(chip8_state *state, unsigned char dump)
     errors += test_op(state, tested, 0x5, dump);
 
 
+    // fX55: Dump registers v0 to vX into memory starting at address in I
+    printf("\n0xfX55: ");
+    // load up our registers with values
+    unsigned short vals[] = {0x10, 0x31, 0x12, 0xa1, 0xaa, 0xff, 0x00,
+                    0x99, 0x14, 0x82, 0x42, 0xce, 0x34, 0x32, 0x11, 0x16};
+    for (int i = 0; i <= 0xf; i++)
+    {
+        state->v[i] = vals[i];
+    }
+    // better check we didn't mess that up.
+    tested = state->v[0xf];
+    errors += test_op(state, tested, 0x16, dump);
+    // Partial dump
+    printf("\n\tSome Regs: ");
+    state->opcode = 0xf855;
+    state->index_reg = 0x500;
+    // Set the memory address on the bound so we know if we overshot
+    state->memory[state->index_reg + 0x9] = 0xee;
+    emulate_opcode(state);
+    for (int i = 0; i <= 0x8; i++)
+    {
+        tested = state->memory[state->index_reg + i];
+        errors += test_op(state, tested, vals[i], dump);
+    }
+    tested = state->memory[state->index_reg + 0x9];
+    errors += test_op(state, tested, 0xee, dump);
+    // Full dump
+    printf("\n\tAll Regs: ");
+    state->opcode = 0xff55;
+    state->index_reg = 0x200;
+    emulate_opcode(state);
+    for (int i = 0; i <= 0xf; i++)
+    {
+        tested = state->memory[state->index_reg + i];
+        errors += test_op(state, tested, vals[i], dump);
+    }
+    // One dump
+    printf("\n\t0 Reg: ");
+    state->opcode = 0xf055;
+    state->index_reg = 0x250;
+    state->memory[state->index_reg + 1] = 0xdd;
+    emulate_opcode(state);
+    tested = state->memory[state->index_reg];
+    errors += test_op(state, tested, vals[0], dump);
+    tested = state->memory[state->index_reg + 1];
+    errors += test_op(state, tested, 0xdd, dump);
 
 
-    // fx55: register dump TODO
+
     // fx65: register load TODO
 
 
