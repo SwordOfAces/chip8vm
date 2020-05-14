@@ -3,9 +3,15 @@
 #include <string.h> // for memset, memcpy
 #include <time.h> // for seeding rand
 
+#include <SDL2/SDL.h>
+
 #include "chip8vm.h"
 #include "testingsys.h"
 
+
+// SDL Consts
+int PIX_SIZE = 10;
+SDL_Window * create_window(void);
 
 int main(int argc, char *argv[]){
     // Ensure that we're being used with what we'll assume is a romfile
@@ -28,13 +34,97 @@ int main(int argc, char *argv[]){
             dump = 1;
         int errors = test_suite(state, dump);
         printf("TOTAL ERRORS: %i\n", errors);
-        exit(0);
+    }
+
+    // Initialize SDL
+    if(SDL_Init(SDL_INIT_VIDEO) < 0)
+    {
+        printf("Failed to initialize the SDL2 library\n");
+        printf("SDL2 Error: %s\n", SDL_GetError());
+        return -1;
+    }
+    SDL_Window *win = create_window();
+
+    // Make surface from window we can draw on
+    SDL_Surface *window_surface = SDL_GetWindowSurface(win);
+    if(!window_surface)
+    {
+        printf("Failed to get the surface from the window\n");
+        printf("SDL2 Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // define bg & fg colors
+    Uint32 bg_fill = SDL_MapRGB(window_surface->format, 0, 0, 0);
+    Uint32 fg_fill = SDL_MapRGB(window_surface->format, 255, 255, 255);
+
+    // Create our virtual pixels
+    SDL_Rect pixels[2048]; // 64 * 32
+    for (int i = 0; i < 2048; i++)
+    {
+        int virt_y = i / 64;
+        int virt_x = i % 64;
+        pixels[i].x = virt_x * PIX_SIZE;
+        pixels[i].y = virt_y * PIX_SIZE;
+        pixels[i].w = PIX_SIZE;
+        pixels[i].h = PIX_SIZE;
+    }
+
+    // TEST LINES
+    unsigned char on = 0xff;
+    state->gfx[63] = on;
+
+    int keep_window_open = 1;
+    int t = 0; // test var
+    while(keep_window_open)
+    {
+        // TEST
+        test_graphics(state, t);
+        t++;
+        // END TESTS
+        // Create an event type variable
+        SDL_Event e;
+        // Will == 0 if no event occurred
+        while(SDL_PollEvent(&e) > 0)
+        {
+            switch(e.type)
+            {
+                // only one event tracked right now: the quit (x) button
+                case SDL_QUIT:
+                    keep_window_open = 0;
+                    break;
+            }
+
+            if (state->draw_flag == 1)
+            {
+                // Fill in whole window with background color
+                // Wanted to replace SDL_MapRGB call but ??????
+                SDL_FillRect(window_surface, NULL, bg_fill);
+
+                // draw rects to window surface
+                for (int i = 0; i < 2048; i++)
+                {
+                    SDL_Rect px = pixels[i];
+                    Uint32 color;
+                    color = state->gfx[i] == on ? fg_fill : bg_fill;
+                    SDL_FillRect(window_surface, &px, color);
+                }
+
+                // Update our window to match our "back work canvas"
+                SDL_UpdateWindowSurface(win);
+                // unset draw flag (to be set by next 00e0 or dXYN call)
+                state->draw_flag = 0;
+            }
+        }
     }
 
 
-    // Load given romfile into VM memory
-    load_rom(argv[1], state);
 
+    // Load given romfile into VM memory
+    // load_rom(argv[1], state);
+
+    
+    // emulate_opcode(state);
     // these ive snagged and will go into advancing afterwards
     // They won't be here ofc
     // unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
@@ -59,15 +149,37 @@ chip8_state * create_state(void)
     chip8_state *state = malloc(sizeof(chip8_state));
     // Initialize important fields
     // It's not important for say, registers to be cleared
-    // and graphics will undoubtably be immediately cleared with 0x00e0 op 
     memset(state->memory, 0, sizeof(state->memory));
+    memset(state->gfx, 0, sizeof(state->gfx));
     state->pc = 0x200;
     state->sp = 0xf;
     // Set all keys to "up" state
     memset(state->key, 0, sizeof(state->key));
+    // Set draw and key flags
+    state->draw_flag = 1;
+    state->key_flag = 0xff;
     return state;
 }
 
+// Create a window
+SDL_Window * create_window(void)
+{
+    // Create window
+    int WIN_WIDTH = 64 * PIX_SIZE;
+    int WIN_HEIGHT = 32 * PIX_SIZE;
+    SDL_Window *window = SDL_CreateWindow("SDL2 Window",
+                                          SDL_WINDOWPOS_CENTERED,
+                                          SDL_WINDOWPOS_CENTERED,
+                                          WIN_WIDTH, WIN_HEIGHT,
+                                          0);
+    if(!window)
+    {
+        printf("Failed to create window\n");
+        printf("SDL2 Error: %s\n", SDL_GetError());
+        exit(1);
+    }
+    return window;
+}
 
 // Load a rom into vm memory
 void load_rom(char *romfilename, chip8_state *state)
@@ -129,12 +241,14 @@ void emulate_opcode(chip8_state *state)
     {
         case 0x0:
             if (opcode == 0x00e0)
+            {
                 // 0x00e0: Clear screen
                 // This should do it, though is not tested yet
                 // unlikely to change from any change in SDL details
                 // really that'd be the point
-                // memset(state->memory, 0, sizeof(state->memory));
-                unimplemented_opcode_err(opcode);
+                memset(state->gfx, 0, sizeof(state->gfx));
+                state->draw_flag = 1;
+            }
             else if (opcode == 0x00ee)
             {
                 // 0x00ee: Return from subroutine

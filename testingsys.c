@@ -776,3 +776,32 @@ int test_suite(chip8_state *state, unsigned char dump)
     printf("\n");
     return errors;
 }
+
+void test_graphics(chip8_state *state, int t)
+{
+    int test_len = 1000000;
+    int which_test;
+    if (t == 0)
+        printf("\ncorner dot");
+    which_test = t / test_len;
+    if (which_test == 1)
+    {
+        if (t == (which_test * test_len))
+        {
+            state->opcode = 0x00e0;
+            emulate_opcode(state);
+            printf("\n0x00e0:");
+        }
+    }
+    else if (which_test == 2)
+    {
+        if (t == (which_test * test_len))
+            printf("\n0xDXYN 0xd121");
+        state->opcode = 0xd121;
+        state->v[0x1] = 0x03;
+        state->v[0x2] = 0x0a;
+        state->index_reg = 0x700;
+        state->memory[0x700] = 0x90;
+        // emulate_opcode(state);
+    }
+}

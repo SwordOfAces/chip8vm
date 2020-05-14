@@ -13,6 +13,10 @@ typedef struct {
     unsigned short stack[16];
     unsigned char sp;           // stack pointer
     unsigned char key[16];      // keypad key states
+
+    // flags go here?
+    unsigned char draw_flag;
+    unsigned char key_flag;
 }
 chip8_state;
 
