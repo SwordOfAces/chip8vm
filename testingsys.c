@@ -777,9 +777,10 @@ int test_suite(chip8_state *state, unsigned char dump)
     return errors;
 }
 
+// NOT BEING USED! led to "weird" workings. AAAGH
 void test_graphics(chip8_state *state, int t)
 {
-    int test_len = 1000000;
+    int test_len = 10000;
     int which_test;
     if (t == 0)
         printf("\ncorner dot");
@@ -796,12 +797,11 @@ void test_graphics(chip8_state *state, int t)
     else if (which_test == 2)
     {
         if (t == (which_test * test_len))
-            printf("\n0xDXYN 0xd121");
-        state->opcode = 0xd121;
-        state->v[0x1] = 0x03;
+            printf("\n0xDXYN 0xd125");
+        state->opcode = 0xd125;
+        state->v[0x1] = 0x0a;
         state->v[0x2] = 0x0a;
-        state->index_reg = 0x700;
-        state->memory[0x700] = 0x90;
-        // emulate_opcode(state);
+        state->index_reg = 0x050;
+        emulate_opcode(state);
     }
 }

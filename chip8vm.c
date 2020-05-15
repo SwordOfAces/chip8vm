@@ -9,8 +9,9 @@
 #include "testingsys.h"
 
 
-// SDL Consts
+// SDL things
 int PIX_SIZE = 10;
+unsigned char on = 0xff;
 SDL_Window * create_window(void);
 
 int main(int argc, char *argv[]){
@@ -70,18 +71,26 @@ int main(int argc, char *argv[]){
         pixels[i].h = PIX_SIZE;
     }
 
-    // TEST LINES
-    unsigned char on = 0xff;
-    state->gfx[63] = on;
-
     int keep_window_open = 1;
-    int t = 0; // test var
+    // TEST
+    //
+    state->opcode = 0xd125;
+    state->v[0x1] = 0x0b;
+    state->v[0x2] = 0x0a;
+    state->index_reg = 0x05a;
+    emulate_opcode(state);
+    test_op(state, state->v[0xf], 0, 0);
+    state->v[0x2] = 0x0e;
+    emulate_opcode(state);
+    test_op(state, state->v[0xf], 1, 0);
+    state->v[0x1] = 0xf;
+    emulate_opcode(state);
+    test_op(state, state->v[0xf], 0, 0);
+    printf("\n");
+    
+    // END TESTS
     while(keep_window_open)
     {
-        // TEST
-        test_graphics(state, t);
-        t++;
-        // END TESTS
         // Create an event type variable
         SDL_Event e;
         // Will == 0 if no event occurred
@@ -94,28 +103,29 @@ int main(int argc, char *argv[]){
                     keep_window_open = 0;
                     break;
             }
-
-            if (state->draw_flag == 1)
-            {
-                // Fill in whole window with background color
-                // Wanted to replace SDL_MapRGB call but ??????
-                SDL_FillRect(window_surface, NULL, bg_fill);
-
-                // draw rects to window surface
-                for (int i = 0; i < 2048; i++)
-                {
-                    SDL_Rect px = pixels[i];
-                    Uint32 color;
-                    color = state->gfx[i] == on ? fg_fill : bg_fill;
-                    SDL_FillRect(window_surface, &px, color);
-                }
-
-                // Update our window to match our "back work canvas"
-                SDL_UpdateWindowSurface(win);
-                // unset draw flag (to be set by next 00e0 or dXYN call)
-                state->draw_flag = 0;
-            }
         }
+
+        // NOTE: the reason for the extra indent is that there's an
+        // intention of only drawing when the draw flag is set to 1
+        // but, wrapping this into a if (state->draw_flag == 1) breaks it
+            // Fill in whole window with background color
+            // Wanted to replace SDL_MapRGB call but ??????
+            SDL_FillRect(window_surface, NULL, bg_fill);
+
+            // draw rects to window surface
+            for (int i = 0; i < 2048; i++)
+            {
+                SDL_Rect px = pixels[i];
+                Uint32 color;
+                color = state->gfx[i] == on ? fg_fill : bg_fill;
+                SDL_FillRect(window_surface, &px, color);
+            }
+
+            // Update our window to match our "back work canvas"
+            SDL_UpdateWindowSurface(win);
+            // unset draw flag (to be set by next 00e0 or dXYN call)
+            state->draw_flag = 0;
+        
     }
 
 
@@ -150,6 +160,27 @@ chip8_state * create_state(void)
     // Initialize important fields
     // It's not important for say, registers to be cleared
     memset(state->memory, 0, sizeof(state->memory));
+    // hardcode memory values:
+    unsigned char font_set[] = {
+        0xf0, 0x90, 0x90, 0x90, 0xf0, // 0 @ 0x050
+        0x20, 0x60, 0x20, 0x20, 0x70, // 1 @ 0x055
+        0xf0, 0x10, 0xf0, 0x80, 0xf0, // 2 @ 0x05a
+        0xf0, 0x10, 0xf0, 0x10, 0xf0, // 3 @ 0x05f
+        0x90, 0x90, 0xf0, 0x10, 0x10, // 4 @ 0x064
+        0xf0, 0x80, 0xf0, 0x10, 0xf0, // 5 @ 0x069
+        0xf0, 0x80, 0xf0, 0x10, 0xf0, // 6 @ 0x06e
+        0xf0, 0x10, 0x20, 0x20, 0x40, // 7 @ 0x073
+        0xf0, 0x90, 0xf0, 0x90, 0xf0, // 8 @ 0x078
+        0xf0, 0x90, 0xf0, 0x10, 0xf0, // 9 @ 0x07d
+        0xf0, 0x90, 0xf0, 0x90, 0x90, // a @ 0x082
+        0xe0, 0x90, 0xe0, 0x90, 0xe0, // b @ 0x087
+        0xf0, 0x80, 0x80, 0x80, 0xf0, // c @ 0x08c
+        0xe0, 0x90, 0x90, 0x90, 0xe0, // d @ 0x087
+        0xf0, 0x80, 0xf0, 0x80, 0xf0, // e @ 0x096
+        0xf0, 0x80, 0xf0, 0x80, 0x80, // f @ 0x09b
+    };
+    // 5 bytes each for 16 hexadecimal chars
+    memcpy(&state->memory[0x50], &font_set, 5 * 16);
     memset(state->gfx, 0, sizeof(state->gfx));
     state->pc = 0x200;
     state->sp = 0xf;
@@ -396,7 +427,27 @@ void emulate_opcode(chip8_state *state)
             // 0xdXYN:
             // Draw sprite of N height at address in I
             // to coords VX, VY (all sprites are 8 bits wide)
-            unimplemented_opcode_err(opcode);
+            vx = state->v[x];
+            vy = state->v[y];
+            state->v[0xf] = 0;
+            unsigned char bit;
+            unsigned int place;
+            for (int i = 0; i < (opcode & 0xf); i++)
+            {
+                for (int b = 0; b < 8; b++)
+                {
+                    bit = (state->memory[(state->index_reg + i)] >> b) & 0x1;
+                    place = ((vy + i) * 64) + vx + (7-b);
+                    // Set VF flag to 1 if there'll be a flip from 1 to 0
+                    if (state->v[0xf] == 0 && state->gfx[place] && bit)
+                        state->v[0xf] = 1;
+                    if (state->gfx[place] == 0)
+                        state->gfx[place] = bit * 0xff;
+                    else
+                        state->gfx[place] = (1-bit) * 0xff;
+                }
+            }
+            state->draw_flag = 1;
             break;
         case 0xe:
             // 0xeX9e: Skip next instruction if key stored in VX is pressed:
