@@ -35,6 +35,7 @@ int main(int argc, char *argv[]){
             dump = 1;
         int errors = test_suite(state, dump);
         printf("TOTAL ERRORS: %i\n", errors);
+        return 0;
     }
 
     // Initialize SDL
@@ -71,24 +72,11 @@ int main(int argc, char *argv[]){
         pixels[i].h = PIX_SIZE;
     }
 
+    // Load given romfile into VM memory
+    load_rom(argv[1], state);
+    // dump_memory(state);
+
     int keep_window_open = 1;
-    // TEST
-    //
-    state->opcode = 0xd125;
-    state->v[0x1] = 0x0b;
-    state->v[0x2] = 0x0a;
-    state->index_reg = 0x05a;
-    emulate_opcode(state);
-    test_op(state, state->v[0xf], 0, 0);
-    state->v[0x2] = 0x0e;
-    emulate_opcode(state);
-    test_op(state, state->v[0xf], 1, 0);
-    state->v[0x1] = 0xf;
-    emulate_opcode(state);
-    test_op(state, state->v[0xf], 0, 0);
-    printf("\n");
-    
-    // END TESTS
     while(keep_window_open)
     {
         // Create an event type variable
@@ -100,11 +88,18 @@ int main(int argc, char *argv[]){
             {
                 // only one event tracked right now: the quit (x) button
                 case SDL_QUIT:
+                    // Destroy the state
+                    free(state);
                     keep_window_open = 0;
                     break;
             }
         }
+        
 
+        state->opcode = state->memory[state->pc] << 8 | state->memory[state->pc + 1];
+        emulate_opcode(state);
+        state->pc += 2;
+        
         // NOTE: the reason for the extra indent is that there's an
         // intention of only drawing when the draw flag is set to 1
         // but, wrapping this into a if (state->draw_flag == 1) breaks it
@@ -130,15 +125,8 @@ int main(int argc, char *argv[]){
 
 
 
-    // Load given romfile into VM memory
-    // load_rom(argv[1], state);
 
     
-    // emulate_opcode(state);
-    // these ive snagged and will go into advancing afterwards
-    // They won't be here ofc
-    // unsigned short opcode = memory[pc] << 8 | memory[pc + 1];
-    // pc += 2;
 
     // this is a good debugging tool. i may make a way to do this
     // during emulation? stepping through a rom?
@@ -147,8 +135,6 @@ int main(int argc, char *argv[]){
     // huge arrays of memory)
     // dump_state(state);
 
-    // Destroy the state
-    free(state);
 }
 
 
@@ -232,9 +218,10 @@ void load_rom(char *romfilename, chip8_state *state)
 // No plan to add 0x0NNN (Call RCA program) but when that's the only
 // one left, this error handling will move there, since it won't be
 // (at that point) repeated any longer.
-void unimplemented_opcode_err(unsigned short opcode)
+void unimplemented_opcode_err(unsigned short pc, unsigned short opcode)
 {
     printf("ERROR!\nUnimplemented Opcode: %04x\n", opcode);
+    printf("Opcode at 0x%04x (in memory)\n", pc);
     exit(1);
 }
 
@@ -250,9 +237,7 @@ void invalid_opcode(unsigned short pc, unsigned short opcode)
 // Decode & emulate opcode. Mainly grouped by first nibble.
 void emulate_opcode(chip8_state *state)
 {
-    // placeholder until actually emulating
-    unsigned short pc = 0;
-    
+    unsigned short pc = state->pc;
     unsigned short opcode = state->opcode;
 
     // Getting X & Y from opcodes is tricky and having a var to hold them
@@ -288,7 +273,7 @@ void emulate_opcode(chip8_state *state)
             }
             else
                 // 0x0NNN Call RCA 1802 program (probably don't need)
-                unimplemented_opcode_err(opcode);
+                unimplemented_opcode_err(pc, opcode);
             break;
         case 0x1:
             // 1NNN: GOTO NNN
@@ -452,10 +437,10 @@ void emulate_opcode(chip8_state *state)
         case 0xe:
             // 0xeX9e: Skip next instruction if key stored in VX is pressed:
             if ((opcode & 0xff) == 0x9e)
-                unimplemented_opcode_err(opcode);
+                unimplemented_opcode_err(pc, opcode);
             // 0xeXa1: Skip next instruction if key NOT pressed:
             else if ((opcode & 0xff) == 0xa1)
-                unimplemented_opcode_err(opcode);
+                unimplemented_opcode_err(pc, opcode);
             else
                 invalid_opcode(pc, opcode);
             break;
@@ -470,7 +455,7 @@ void emulate_opcode(chip8_state *state)
                 case 0x0a:
                     // 0xfX0a: Wait for keypress, then store it in VX
                     // Blocking operation
-                    unimplemented_opcode_err(opcode);
+                    unimplemented_opcode_err(pc, opcode);
                     break;
                 case 0x15:
                     // 0xfX15: Set delay timer to VX
