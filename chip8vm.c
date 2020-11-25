@@ -9,10 +9,11 @@
 #include "chip8vm.h"
 #include "testingsys.h"
 
-
-// SDL things
+// CONSTS
+unsigned int FRAME_DELAY = 3333; // microseconds for usleep
 int PIX_SIZE = 10;
 unsigned char on = 0xff;
+
 SDL_Window * create_window(void);
 
 int main(int argc, char *argv[]){
@@ -102,7 +103,14 @@ int main(int argc, char *argv[]){
         emulate_opcode(state);
         state->pc += 2;
         // printf("%x\n", state->pc);
-        usleep(3333); // ~1/30 second
+        // timing
+        usleep(FRAME_DELAY); // ~1/30 second
+        state->delay_timer == 0 ? state->delay_timer = 0 : state->delay_timer--;
+        state->sound_timer == 0 ? state->sound_timer = 0 : state->sound_timer--;
+        /* seems sound is difficult in sdl
+         * if (state->sound_timer == 0)
+         *  beep();
+         */
         
         // NOTE: the reason for the extra indent is that there's an
         // intention of only drawing when the draw flag is set to 1
