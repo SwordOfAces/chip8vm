@@ -96,10 +96,12 @@ int main(int argc, char *argv[]){
             }
         }
         
+        update_keys(state);
 
         state->opcode = state->memory[state->pc] << 8 | state->memory[state->pc + 1];
         emulate_opcode(state);
         state->pc += 2;
+        // printf("%x\n", state->pc);
         usleep(3333); // ~1/30 second
         
         // NOTE: the reason for the extra indent is that there's an
@@ -124,19 +126,6 @@ int main(int argc, char *argv[]){
             state->draw_flag = 0;
         
     }
-
-
-
-
-    
-
-    // this is a good debugging tool. i may make a way to do this
-    // during emulation? stepping through a rom?
-    // dump_memory(state);
-    // Dump useful state variables (rather, ones that aren't
-    // huge arrays of memory)
-    // dump_state(state);
-
 }
 
 
@@ -270,7 +259,7 @@ void emulate_opcode(chip8_state *state)
             else if (opcode == 0x00ee)
             {
                 // 0x00ee: Return from subroutine
-                state->pc = state->stack[state->sp];
+                state->pc = state->stack[state->sp]; // REVERT +2
                 state->sp == 0xf ? state->sp = 0x0 : state->sp++;
             }
             else
@@ -279,13 +268,13 @@ void emulate_opcode(chip8_state *state)
             break;
         case 0x1:
             // 1NNN: GOTO NNN
-            state->pc = opcode & 0xfff;
+            state->pc = (opcode & 0xfff) - 2; // REVERT +2
             break;
         case 0x2:
             // 2NNN: Call subroutine
             state->sp == 0 ? state->sp = 0xf : state->sp--;
             state->stack[state->sp] = state->pc;
-            state->pc = opcode & 0xfff;
+            state->pc = (opcode & 0xfff) - 2; // REVERT +2
             break;
         case 0x3:
             // 0x3XNN: Skip next instruction if VX == NN
@@ -403,7 +392,8 @@ void emulate_opcode(chip8_state *state)
         case 0xb:
             // 0xbNNN: Jump PC to address V0 + NNN
             vx = state->v[0];
-            state->pc = (vx + (opcode & 0xfff)) & 0xfff;
+            // REVERT +2
+            state->pc = ((vx + (opcode & 0xfff)) & 0xfff) - 2;
             break;
         case 0xc:
             // 0xcXNN: Set VX to random number between 0 and 255,
@@ -464,8 +454,22 @@ void emulate_opcode(chip8_state *state)
                     break;
                 case 0x0a:
                     // 0xfX0a: Wait for keypress, then store it in VX
-                    // Blocking operation
-                    unimplemented_opcode_err(pc, opcode);
+                    // Blocking operation. hacky?
+                    state->key_flag = 0xff;
+                    while (state->key_flag == 0xff)
+                    {
+                        SDL_PumpEvents();
+                        update_keys(state);
+                        for (int i=0x0; i<= 0xf; i++)
+                        {
+                            if (state->key[i] == 1)
+                            {
+                                state->v[x] = i;
+                                state->key_flag = i;
+                                break;
+                            }
+                        }
+                    }
                     break;
                 case 0x15:
                     // 0xfX15: Set delay timer to VX
@@ -523,6 +527,28 @@ void emulate_opcode(chip8_state *state)
             }
             break;
     }
+}
+
+void update_keys(chip8_state *state)
+{
+    const Uint8* key_states = SDL_GetKeyboardState(NULL);
+    // pull the keys we want into our state->key array
+    state->key[0x0] = key_states[SDL_SCANCODE_X]; 
+    state->key[0x1] = key_states[SDL_SCANCODE_1]; 
+    state->key[0x2] = key_states[SDL_SCANCODE_2]; 
+    state->key[0x3] = key_states[SDL_SCANCODE_3]; 
+    state->key[0x4] = key_states[SDL_SCANCODE_Q]; 
+    state->key[0x5] = key_states[SDL_SCANCODE_W]; 
+    state->key[0x6] = key_states[SDL_SCANCODE_E]; 
+    state->key[0x7] = key_states[SDL_SCANCODE_A]; 
+    state->key[0x8] = key_states[SDL_SCANCODE_S]; 
+    state->key[0x9] = key_states[SDL_SCANCODE_D]; 
+    state->key[0xa] = key_states[SDL_SCANCODE_Z]; 
+    state->key[0xb] = key_states[SDL_SCANCODE_C]; 
+    state->key[0xc] = key_states[SDL_SCANCODE_4]; 
+    state->key[0xd] = key_states[SDL_SCANCODE_R]; 
+    state->key[0xe] = key_states[SDL_SCANCODE_F]; 
+    state->key[0xf] = key_states[SDL_SCANCODE_V]; 
 }
 
 

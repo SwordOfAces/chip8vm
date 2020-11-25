@@ -25,6 +25,7 @@ void load_rom(char *romfilename, chip8_state *state);
 void unimplemented_opcode_err(unsigned short pc, unsigned short opcode);
 void invalid_opcode(unsigned short pc, unsigned short opcode);
 void emulate_opcode(chip8_state *state);
+void update_keys(chip8_state *state);
 void dump_memory(chip8_state *state);
 void dump_state(chip8_state *state);
 
