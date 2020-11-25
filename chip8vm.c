@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h> // for memset, memcpy
 #include <time.h> // for seeding rand
+#include <unistd.h> // for usleep
 
 #include <SDL2/SDL.h>
 
@@ -99,6 +100,7 @@ int main(int argc, char *argv[]){
         state->opcode = state->memory[state->pc] << 8 | state->memory[state->pc + 1];
         emulate_opcode(state);
         state->pc += 2;
+        usleep(3333); // ~1/30 second
         
         // NOTE: the reason for the extra indent is that there's an
         // intention of only drawing when the draw flag is set to 1
