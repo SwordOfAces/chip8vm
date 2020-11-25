@@ -538,11 +538,46 @@ int test_suite(chip8_state *state, unsigned char dump)
     }
 
 
-    //
-    // 0xdXYN: Display TODO
-    //
-    // 0xeX9e: keyop TODO
-    // 0xeXa1: keyop TODO
+   
+    // 0xdXYN: Display // Not covered here
+    
+    // 0xeX9e: skip next instruction if key stored in VX is pressed
+    printf("\n0xeX9e: ");
+    // key is *NOT* pressed, do *NOT* skip:
+    state->opcode = 0xe09e;
+    state->pc = 0x400;
+    state->v[0] = 0x0f;
+    state->key[0xf] = 0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x400, dump);
+    // key *IS* pressed, *DO* skip:
+    state->opcode = 0xe09e;
+    state->pc = 0x400;
+    state->v[0] = 0x0f;
+    state->key[0xf] = 1;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x402, dump);
+
+    // 0xeXa1: skip next instruction if key stored in VX is *NOT* pressed
+    printf("\n0xeXa1: ");
+    // key is *NOT* pressed, *DO* skip:
+    state->opcode = 0xe0a1;
+    state->pc = 0x400;
+    state->v[0] = 0x0f;
+    state->key[0xf] = 0;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x402, dump);
+    // key *IS* pressed, *DO* skip:
+    state->opcode = 0xe0a1;
+    state->pc = 0x400;
+    state->v[0] = 0x0f;
+    state->key[0xf] = 1;
+    emulate_opcode(state);
+    tested = state->pc;
+    errors += test_op(state, tested, 0x400, dump);
 
 
     // 0xfX07: Set VX to value of delay timer

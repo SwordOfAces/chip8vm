@@ -437,12 +437,20 @@ void emulate_opcode(chip8_state *state)
             state->draw_flag = 1;
             break;
         case 0xe:
+            // recall: state->key[_vx_value_] = 0 if up, else 1
             // 0xeX9e: Skip next instruction if key stored in VX is pressed:
+            vx = state->v[x];
             if ((opcode & 0xff) == 0x9e)
-                unimplemented_opcode_err(pc, opcode);
+            {
+                if (state->key[vx] != 0)
+                    state->pc += 2;
+            }
             // 0xeXa1: Skip next instruction if key NOT pressed:
             else if ((opcode & 0xff) == 0xa1)
-                unimplemented_opcode_err(pc, opcode);
+            {
+                if (state->key[vx] == 0)
+                    state->pc += 2;
+            }
             else
                 invalid_opcode(pc, opcode);
             break;
