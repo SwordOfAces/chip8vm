@@ -9,6 +9,9 @@
 #include "chip8vm.h"
 #include "testingsys.h"
 
+// version: 1.0
+// author: rjk
+
 // CONSTS
 unsigned int FRAME_DELAY = 3333; // microseconds for usleep
 int PIX_SIZE = 10;
